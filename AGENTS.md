@@ -2,7 +2,7 @@
 
 A <Language> implementation of the CWA draft specification, started from the assembler template (PORTING.md). Its target is every published conformance case: each case's payload byte for byte and its trace, plus every rejection case rejected. `conformance-report.json` records the result, and the website imports it beside the other implementations' reports.
 
-Fill in the `<placeholders>` in this file, README.md and NOTICE before the first commit. Everything else here is the rule set the Python reference assembler and the TypeScript assembler work under. It is not optional.
+`python3 scripts/init_port.py` fills the `<placeholders>` in this file, README.md, NOTICE and the CI workflow (PORTING.md, step 1); fill any it left by hand before the first commit. Everything else here is the rule set the Python reference assembler and the TypeScript assembler work under. It is not optional.
 
 ## Rules
 

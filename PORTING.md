@@ -31,10 +31,18 @@ A port is conformant when every published case's payload matches byte for byte a
 ## Step 1: make the repository
 
 1. Create the repository from this template. Name it `assembler-<language>` in the organization, as `assembler-python` and `assembler-typescript` are; the local folder is `cwa-assembler-<language>`.
-2. Replace every `<placeholder>` in AGENTS.md, README.md and NOTICE: the language, the package name, the commands. The package name follows the ecosystem's convention; the TypeScript one is `@contextwindowarchitecture/assembler`. NOTICE's first line names the package.
+2. Name the port, once, from its root. The package name follows the ecosystem's convention; the TypeScript one is `@contextwindowarchitecture/assembler`. For a Go port:
+
+   ```sh
+   python3 scripts/init_port.py --language Go --package github.com/contextwindowarchitecture/assembler-go \
+     --repository contextwindowarchitecture/assembler-go \
+     --install "go mod download" --build "go build ./..." --test "go test ./..." --conformance "go run ./cmd/conformance"
+   ```
+
+   It fills the language and the commands into AGENTS.md and the commented test job in the CI workflow, names the package in NOTICE, replaces the template's README.md with the port's starter README (the outline at the end of this file, with `TODO` where only the port can say), fills the language and package into this guide so its commands paste as they are, and adds the GitHub remote as `origin` when the checkout has none. A command left out stays a `<placeholder>` to fill by hand; the script says which. It refuses to run twice.
 3. Add the language's ignores to `.gitignore`. `vendor/` stays tracked: it is the pinned contract.
-4. Add the language's manifest, and the test job to `.github/workflows/ci.yml`. The other two jobs already work.
-5. Rewrite README.md for the port (the outline is at the end of this file). Keep this file while it helps, and delete it once the port stands. Then make the first commit: `chore: start the <language> assembler from the template`.
+4. Add the language's manifest, and finish the test job in `.github/workflows/ci.yml`: the commented block is the shape, and the runtime setup action is the language's. The other two jobs already work.
+5. Finish README.md's `TODO` lines as the port takes shape. Keep this file while it helps, and delete it once the port stands. Then make the first commit: `chore: start the <language> assembler from the template`.
 
 ## Step 2: vendor the contract
 

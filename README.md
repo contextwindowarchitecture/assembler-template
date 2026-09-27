@@ -7,7 +7,8 @@ It holds no assembler code. A port is built from the published spec alone, test-
 ## Quick start
 
 ```sh
-# 1. Create the port from this template (PORTING.md, step 1), then vendor the contract from a website checkout:
+# 1. Create the port from this template and name it (PORTING.md, step 1), then vendor the contract from a website checkout:
+python3 scripts/init_port.py --language <Language> --package <package> --repository contextwindowarchitecture/assembler-<language>
 python3 scripts/vendor_contract.py --website ../website
 python3 scripts/vendor_contract.py --verify
 
@@ -28,6 +29,7 @@ python3 scripts/check_report.py --allow-failures
 | `LICENSE`, `NOTICE` | Apache-2.0, the license of the specification; a port's LICENSE must equal the vendored one |
 | `cliff.toml` | git-cliff configuration, so the changelog is generated from the Conventional Commit history |
 | `.github/workflows/ci.yml` | CI: the vendored contract against the website commit it pins, and the committed report against the contract; add the language's test job |
+| `scripts/init_port.py` | Names a new port: fills the language, package and commands into the files above, writes the port's starter README and NOTICE, and adds the GitHub remote |
 | `scripts/vendor_contract.py` | Copies the contract from a website checkout into `vendor/cwa/`, pinned by SHA-256 in `vendor/cwa.lock.json`; checks drift; verifies the lock |
 | `scripts/conformance.py` | Runs every case and rejection through an adapter command and writes `conformance-report.json` |
 | `scripts/check_report.py` | Checks a report, whichever runner wrote it, against the schema, the lock and the case directories |
