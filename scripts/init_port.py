@@ -41,7 +41,7 @@ TODO: the call and its types, in the language's terms. What it must say:
 
 - `assemble(snapshot)` takes a snapshot in the shape of `schema/snapshot.schema.json`, the frozen assembly input (R-23), and returns the payload, the rendered UTF-8 bytes, or null when the assembly is refused (`trace.refused.reason` says why), together with a trace valid against `schema/trace.schema.json`.
 - A snapshot that fails its schemas or the snapshot checks is rejected with its problems in words: no payload and no trace (R-17).
-- A snapshot that names a tokenizer or renderer this package does not provide is unsupported, not invalid. The package provides the tokenizers `fixture-whitespace/v1` and `estimate-utf8/v1` and the renderers `fixture-xml/v1` and `cwa-messages/v1`; callers pass their model's tokenizer keyed by the id their snapshots name, and a built-in id cannot be redefined.
+- A snapshot that names a tokenizer or renderer this package does not provide is unsupported, not invalid. The package provides the tokenizers `fixture-whitespace/v1` and `estimate-utf8/v1` and the renderers `fixture-xml/v1` and `cwa-messages/v1`; callers pass their model's tokenizer, and a renderer if the package takes any, under an id no published component of that kind uses; a published id, even one this package does not provide, stops the call before assembly with no payload and no trace (R-16).
 - `trace_id` and `timings` may differ between runs of the same snapshot (R-23); everything else, the payload bytes included, is deterministic.
 
 ## Requirements

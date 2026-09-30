@@ -95,6 +95,16 @@ flowchart TD
 
 The order the cases fell in for the TypeScript port: the rejection cases first (stage 3), then `fixture-three-slot`, then `admission-reasons`, which exercises most of admission at once, then the `conflict-*`, `supersede-*`, `dedupe-*` and `diversity-*` cases, then `budget-*` and `protected-*`, then `messages-*`, with `ordering-astral-ids` and `threshold-beyond-2-53` as the portability checks. A vendored case the port cannot pass yet sits in `PENDING`.
 
+### Components the application supplies
+
+R-16 lets an application count with a tokenizer of its own, and a port may take an application's renderer too, but never under a published ID. A tokenizer under the ID of a published tokenizer, or a renderer under the ID of a published renderer, stops the call before assembly, with no payload and no trace. That holds for an ID the port does not provide itself, and for an entry the snapshot does not name. No case can hand the port a component, so this is the port's own unit test, and the three implementations so far each found a way around a first attempt:
+
+- Guard the published list from the vendored README, not the port's built-in table, and pin the two with a test that reads the README's Tokenizers and renderers bullets, so a newly published component fails the test until the guard names it.
+- If a component carries its own ID, as a Python object with an `id` does, require each key to equal it. The trace names the component by that ID, so a tokenizer passed under another key could still claim to be a published one.
+- Don't export the published tables as mutable objects. A caller that overwrites a built-in entry in place gets a trace that names the published tokenizer with another count. Freeze or copy them.
+- Look a snapshot's IDs up as own keys only (see the portability checklist).
+- Don't call the stop a refusal: the spec keeps that word for assemblies that end with a trace.
+
 ## Step 5: the conformance runner
 
 The port needs a command that runs every case and rejection and writes `conformance-report.json` (README, Reporting results). Until a native runner exists, `scripts/conformance.py` does it through a small adapter the port provides:
@@ -156,6 +166,7 @@ Every row is a place where languages disagree, and the cases were written to cat
 | No normalization | Deduplication keys compare code units: no NFC, no case folding, whatever the runtime's Unicode version | Deduplication | `dedupe-exact` |
 | Fitting | One fit test per reduction over the whole rendered payload, and the margin in integer arithmetic; shortcuts may not change a decision | Fitting | `budget-margin-rounding`, `budget-slot-floor` |
 | Hashes | SHA-256 over UTF-8 bytes, lowercase hex, for the digest and `result.hash` | Snapshot digest, Tokenizers and renderers | every case |
+| Lookups by ID | Look up a snapshot's tokenizer, renderer and producer IDs as own keys only. A JavaScript object inherits `toString`, `constructor` and `__proto__`, which a schema-valid snapshot can name; it must get an unsupported component or an unlisted producer, never an inherited function | Tokenizers and renderers, Admission | the port's own tests; no case names one |
 
 ## README outline for the port
 
@@ -163,7 +174,7 @@ The TypeScript port's README is the model. In order:
 
 1. The package name, one sentence on what it does (admits, resolves, fits, renders, traces), and a status line with the case counts it passes.
 2. Install.
-3. Use: the assemble call takes a snapshot in the shape of `snapshot.schema.json` and returns the payload bytes, or null when refused, with the trace; an invalid snapshot raises a rejection with its problems and no trace; an unknown tokenizer or renderer raises an unsupported-component error; callers pass their own tokenizers keyed by id; `trace_id` and `timings` may differ between runs and nothing else does.
+3. Use: the assemble call takes a snapshot in the shape of `snapshot.schema.json` and returns the payload bytes, or null when refused, with the trace; an invalid snapshot raises a rejection with its problems and no trace; an unknown tokenizer or renderer raises an unsupported-component error; callers may pass their own tokenizers, and renderers if the port takes any, under IDs no published component of that kind uses, and a published ID stops the call before assembly (R-16); `trace_id` and `timings` may differ between runs and nothing else does.
 4. Requirements: runtime versions.
 5. Development: the commands.
 6. Cost: the fit test's cost, as the README's Fitting section states it.
