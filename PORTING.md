@@ -41,7 +41,7 @@ A port is conformant when every published case's payload matches byte for byte a
 
    It fills the language and the commands into AGENTS.md and the commented test job in the CI workflow, names the package in NOTICE, replaces the template's README.md with the port's starter README (the outline at the end of this file, with `TODO` where only the port can say), fills the language and package into this guide so its commands paste as they are, and adds the GitHub remote as `origin` when the checkout has none. A command left out stays a `<placeholder>` to fill by hand; the script says which. It refuses to run twice.
 3. Add the language's ignores to `.gitignore`. `vendor/` stays tracked: it is the pinned contract.
-4. Add the language's manifest, and finish the test job in `.github/workflows/ci.yml`: the commented block is the shape, and the runtime setup action is the language's. The other two jobs already work.
+4. Add the language's manifest, and finish the test job in `.github/workflows/ci.yml`: the commented block is the shape, and the runtime setup action is the language's. Keep the `ref` on its checkout: `.github/workflows/release.yml` calls this workflow to test a tag before it releases it, and passes the tag there. The other two jobs already work, and so does the release workflow.
 5. Finish README.md's `TODO` lines as the port takes shape. Keep this file while it helps, and delete it once the port stands. Then make the first commit: `chore: start the <language> assembler from the template`.
 
 ## Step 2: vendor the contract
