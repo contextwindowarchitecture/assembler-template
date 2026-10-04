@@ -168,11 +168,13 @@ def refusal(trace: Any) -> str:
 
 def required_components(conformance: Path) -> set[str]:
     """The tokenizers and renderers every implementation provides: the bullets under the vendored README's
-    Tokenizers and renderers heading, which opens "Every implementation provides the tokenizers and renderers below"."""
+    Tokenizers and renderers heading, which opens "Every implementation provides the tokenizers and renderers below,
+    before Optional". The section stops at the next heading of any level, so a component listed under its Optional
+    subheading is published but not required."""
     text = (conformance / "README.md").read_text(encoding="utf-8")
     if "\n## Tokenizers and renderers\n" not in text:
         sys.exit(f"{conformance / 'README.md'} has no Tokenizers and renderers section; re-vendor the contract")
-    section = text.split("\n## Tokenizers and renderers\n", 1)[1].split("\n## ", 1)[0]
+    section = re.split(r"^#+ ", text.split("\n## Tokenizers and renderers\n", 1)[1], maxsplit=1, flags=re.M)[0]
     return set(re.findall(r"^- `([^`]+)`", section, re.M))
 
 
