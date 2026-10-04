@@ -16,7 +16,8 @@ Any other exit code, or stdout that is not such an object, fails the case with s
 compares as conformance/README.md, Running a case, says: the payload byte for byte, the trace field for field
 without trace_id, timings and recovery.detail, and it validates each trace against trace.schema.json when the jsonschema package
 is installed. It writes the report in the shape of conformance_report.schema.json (Reporting results), prints a
-summary, and exits 1 unless every case passed and every rejection snapshot was rejected.
+summary, and exits 1 unless every case passed and every rejection snapshot was rejected, apart from those skipped
+for an optional component the port leaves out.
 
 This is a bootstrap tool: it gets a port a report before it has a runner of its own. A port may keep it or
 replace it with a native runner that does the same; scripts/check_report.py checks either's report.
@@ -283,13 +284,17 @@ def main() -> int:
     }
     args.out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-    passed = sum(row["outcome"] == "passed" for row in report["cases"])
-    rejected = sum(row["outcome"] == "rejected" for row in report["rejections"])
-    print(f"{args.out}: {passed}/{len(report['cases'])} cases passed, {rejected}/{len(report['rejections'])} rejection snapshots rejected")
-    for row in report["cases"] + report["rejections"]:
+    cases, rejections = report["cases"], report["rejections"]
+    passed = sum(row["outcome"] == "passed" for row in cases)
+    rejected = sum(row["outcome"] == "rejected" for row in rejections)
+    skipped = sum(row["outcome"] == "skipped" for row in cases + rejections)
+    print(f"{args.out}: {passed}/{len(cases)} cases passed, {rejected}/{len(rejections)} rejection snapshots rejected"
+          + (f", {skipped} skipped for an optional component" if skipped else ""))
+    for row in cases + rejections:
         if "detail" in row:
             print(f"  {row['id']}: {row['outcome']}: {row['detail']}")
-    return 0 if passed == len(report["cases"]) and rejected == len(report["rejections"]) else 1
+    # unsupported() skips only for an optional component, which a port may leave out, so a skip is not a failure.
+    return 0 if passed + rejected + skipped == len(cases) + len(rejections) else 1
 
 
 if __name__ == "__main__":

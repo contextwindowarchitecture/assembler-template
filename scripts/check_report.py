@@ -9,8 +9,8 @@ installed); that its contract names the lock's website commit and dirty flag; th
 every directory under the vendored conformance cases and rejections, in id order, with the rules from each
 case.json; that no case is skipped unless it uses a component the vendored README does not require, since a
 port that lacks a required one has failed the case; and, unless --allow-failures, that every case passed and
-every rejection snapshot was rejected (conformance/README.md, Reporting results). CI runs it so a partial or
-stale report never lands.
+every rejection snapshot was rejected, apart from those skipped for an optional component the port leaves out
+(conformance/README.md, Reporting results). CI runs it so a partial or stale report never lands.
 """
 from __future__ import annotations
 
@@ -24,7 +24,9 @@ from conformance import LOCK, ROOT, ids, optional_components, read_json, require
 
 
 def check_rows(report: dict, kind: str, directory: Path, ok: str, required: set[str]) -> tuple[list[str], list[str]]:
-    """Structural problems with one list of the report, and the ids that did not reach the counting outcome."""
+    """Structural problems with one list of the report, and the rows that neither reached the counting outcome
+    nor were skipped. A skip that uses only required components is a problem, so any other skip is for an optional
+    component, which a port may leave out."""
     rows = report.get(kind)
     if rows is None:
         note = ", so no rejection case counts (Reporting results)" if kind == "rejections" else ""
@@ -43,7 +45,7 @@ def check_rows(report: dict, kind: str, directory: Path, ok: str, required: set[
             fields = ("tokenizer", "renderer") if kind == "cases" else ("renderer",)
             if not optional_components(snapshot, fields, required):
                 problems.append(f"{kind}: {row['id']} is skipped, but it uses only required components, so it has failed")
-    failures = [f"{row.get('id')}: {row.get('outcome')}: {row.get('detail', '')}".rstrip(": ") for row in rows if row.get("outcome") != ok]
+    failures = [f"{row.get('id')}: {row.get('outcome')}: {row.get('detail', '')}".rstrip(": ") for row in rows if row.get("outcome") not in (ok, "skipped")]
     return problems, failures
 
 
@@ -81,8 +83,10 @@ def main() -> int:
     for problem in problems:
         print(problem, file=sys.stderr)
     cases, rejections = report.get("cases") or [], report.get("rejections") or []
+    skipped = sum(r.get("outcome") == "skipped" for r in cases + rejections)
     print(f"{args.report}: {sum(r.get('outcome') == 'passed' for r in cases)}/{len(cases)} cases passed, "
-          f"{sum(r.get('outcome') == 'rejected' for r in rejections)}/{len(rejections)} rejection snapshots rejected")
+          f"{sum(r.get('outcome') == 'rejected' for r in rejections)}/{len(rejections)} rejection snapshots rejected"
+          + (f", {skipped} skipped" if skipped else ""))
     for failure in failures:
         print(f"  {failure}")
     if problems:
