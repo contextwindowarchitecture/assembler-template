@@ -17,7 +17,8 @@ Any other exit code, or stdout that is not such an object, fails the case with s
 compares as conformance/README.md, Running a case, says: the payload byte for byte, the trace field for field
 without trace_id, timings and recovery.detail, and it validates each trace against trace.schema.json when the jsonschema package
 is installed. It writes the report in the shape of conformance_report.schema.json (Reporting results), its contract
-naming the repository, commit and dirty flag the lock records (the repository defaults to CONTRACT_REPOSITORY), prints a
+naming the repository, spec_commit and dirty flag vendor/cwa.lock.json records, so a report can be listed in the
+specification repository's implementations/ (PORTING.md, step 6), prints a
 summary, and exits 1 unless every case passed and every rejection snapshot was rejected, apart from those skipped
 for an optional component the port leaves out.
 
@@ -40,8 +41,6 @@ ROOT = Path(__file__).resolve().parent.parent
 LOCK = ROOT / "vendor" / "cwa.lock.json"
 SCHEMAS = ROOT / "vendor" / "cwa" / "schema"
 MISSING = object()
-# The repository the contract is vendored from, as owner/name, for a lock that does not record its own.
-CONTRACT_REPOSITORY = "contextwindowarchitecture/website"
 
 
 def utf16(s: str) -> bytes:
@@ -55,8 +54,11 @@ def read_json(path: Path) -> Any:
 
 def report_contract(lock: dict) -> dict:
     """The report's contract member: the repository and commit the cases were vendored from, and whether the vendored
-    sources were dirty there (Reporting results). The lock's own repository wins over CONTRACT_REPOSITORY."""
-    return {"repository": lock.get("repository", CONTRACT_REPOSITORY), "commit": lock["website_commit"], "dirty": lock["dirty"]}
+    sources were dirty there (Reporting results), all three as the lock records them. A lock from before the
+    specification repository, with website_commit and no repository, cannot name them: re-vendor."""
+    if "repository" not in lock or "spec_commit" not in lock:
+        sys.exit(f"{LOCK} names no repository and spec_commit; re-vendor with scripts/vendor_contract.py --spec <checkout> (PORTING.md, step 2)")
+    return {"repository": lock["repository"], "commit": lock["spec_commit"], "dirty": lock["dirty"]}
 
 
 def validator_for(name: str) -> Any:
@@ -277,7 +279,7 @@ def main() -> int:
     args = parser.parse_args()
 
     if not LOCK.exists():
-        sys.exit("vendor/cwa.lock.json does not exist; run scripts/vendor_contract.py --website <checkout> first")
+        sys.exit("vendor/cwa.lock.json does not exist; run scripts/vendor_contract.py --spec <checkout> first")
     lock = read_json(LOCK)
     adapter = Adapter(shlex.split(args.command), args.timeout)
     trace_validator = validator_for("trace.schema.json")
@@ -303,6 +305,8 @@ def main() -> int:
     passed = sum(row["outcome"] == "passed" for row in cases)
     rejected = sum(row["outcome"] == "rejected" for row in rejections)
     skipped = sum(row["outcome"] == "skipped" for row in cases + rejections)
+    contract = report["contract"]
+    print(f"{args.out}: cases from {contract['repository']} {contract['commit'][:7]}{' (dirty)' if contract['dirty'] else ''}")
     print(f"{args.out}: {passed}/{len(cases)} cases passed, {rejected}/{len(rejections)} rejection snapshots rejected"
           + (f", {skipped} skipped for an optional component" if skipped else ""))
     for row in cases + rejections:

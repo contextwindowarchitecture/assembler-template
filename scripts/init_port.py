@@ -68,9 +68,11 @@ Every reduction under budget pressure is its own fit test, and every fit test re
 
 This runs every vendored case and rejection snapshot as `conformance/README.md` describes. It writes `conformance-report.json`, valid against `schema/conformance_report.schema.json`, and exits 1 unless every case passed and every rejection snapshot was rejected, apart from those skipped for an optional component. A case passes only when its payload matches byte for byte and its trace matches field for field, except `trace_id` and `timings`. The committed report is the current run: a test fails when it goes stale. A case is skipped only when it uses a tokenizer or renderer the vendored README lists under Optional, such as `cwa-message-blocks/v1`, and this package does not provide it; a case that uses only required ones and does not pass has failed.
 
+The Assembler page lists this implementation once its report is in the specification repository's `implementations/`: run `python3 conformance/import_report.py ../assembler-{slug} {slug} --label {language}` in a checkout of that repository and open a pull request with the files it writes (its `conformance/README.md`, Reporting results).
+
 ## The contract
 
-`vendor/cwa/` holds the published contract this implementation follows: the schemas, the contract data and the conformance cases, copied from the website repository. `vendor/cwa.lock.json` pins each file by SHA-256 and records the website commit. It is Apache-2.0 licensed; see `vendor/cwa/LICENSE` and `vendor/cwa/NOTICE`.
+`vendor/cwa/` holds the published contract this implementation follows: the schemas, the contract data and the conformance cases, copied from the specification repository, [contextwindowarchitecture/contextwindowarchitecture](https://github.com/contextwindowarchitecture/contextwindowarchitecture), with `python3 scripts/vendor_contract.py --spec ../contextwindowarchitecture`. `vendor/cwa.lock.json` pins each file by SHA-256 and records the repository and the commit it came from (`spec_commit`); the report's `contract` names both. It is Apache-2.0 licensed; see `vendor/cwa/LICENSE` and `vendor/cwa/NOTICE`.
 
 See [AGENTS.md](AGENTS.md) for the working rules.
 
@@ -85,8 +87,9 @@ Copyright 2026 Melvin Hillsman
 This product is licensed under the Apache License, Version 2.0 (see LICENSE).
 
 vendor/cwa/ holds the published CWA JSON Schemas, contract data and conformance cases this implementation
-follows. They come from the Context Window Architecture specification and website, Copyright 2026 Melvin
-Hillsman, also licensed under the Apache License, Version 2.0; see vendor/cwa/LICENSE and vendor/cwa/NOTICE.
+follows. They come from the Context Window Architecture specification repository
+(github.com/contextwindowarchitecture/contextwindowarchitecture), Copyright 2026 Melvin Hillsman, also licensed
+under the Apache License, Version 2.0; see vendor/cwa/LICENSE and vendor/cwa/NOTICE.
 """
 
 # The paragraph in AGENTS.md that points at this script, and what it becomes once the port is named.
@@ -108,7 +111,7 @@ def replace(path: Path, substitutions: dict[str, str]) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--language", required=True, help="the language, as the website names it, e.g. Go or TypeScript")
+    parser.add_argument("--language", required=True, help="the language, as the Assembler page labels it, e.g. Go or TypeScript")
     parser.add_argument("--package", required=True, help="the package name in the language's ecosystem")
     parser.add_argument("--slug", help="the lower-case language name in repository names; default: the language lower-cased")
     parser.add_argument("--repository", help="the GitHub repository as owner/name, e.g. contextwindowarchitecture/assembler-go")
@@ -131,7 +134,7 @@ def main() -> int:
     replaced += replace(ROOT / ".github" / "workflows" / "ci.yml", {"<runtime>": args.language, **given})
     replaced += replace(ROOT / "PORTING.md", {"<Language>": args.language, "<language>": slug, "<package>": args.package})
     (ROOT / "NOTICE").write_text(NOTICE.format(package=args.package, language=args.language), encoding="utf-8")
-    (ROOT / "README.md").write_text(README.format(package=args.package, language=args.language,
+    (ROOT / "README.md").write_text(README.format(package=args.package, language=args.language, slug=slug,
                                                   **{key.strip("<>"): value or key for key, value in commands.items()}), encoding="utf-8")
     print(f"named the port {args.package} ({args.language}); {replaced} placeholders filled in AGENTS.md, ci.yml and PORTING.md; NOTICE and README.md written")
     if left:

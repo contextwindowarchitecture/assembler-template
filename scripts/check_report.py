@@ -6,8 +6,8 @@
 
 Checks that the report validates against conformance_report.schema.json (when the jsonschema package is
 installed); that its contract names the repository, commit and dirty flag the lock records, as {"repository",
-"commit", "dirty"} (the repository defaults to contextwindowarchitecture/website), so a report still in the old
-{"website_commit", "dirty"} shape fails; that cases and rejections list
+"commit", "dirty"} with the commit from the lock's spec_commit, so a report vendored from another commit or still in
+the old {"website_commit", "dirty"} shape fails; that cases and rejections list
 every directory under the vendored conformance cases and rejections, in id order, with the rules from each
 case.json; that every skipped row's detail names, as "<kind> <id> is not provided", an optional component its case
 uses, since a port that lacks only required ones has failed the case; and, unless --allow-failures, that every case passed and
@@ -76,7 +76,8 @@ def main() -> int:
         problems.append(f"the report fails conformance_report.schema.json at {problem}")
     contract = report_contract(lock)
     if report.get("contract") != contract:
-        problems.append(f"contract is {json.dumps(report.get('contract'))}, but the lock says {json.dumps(contract)}: rerun the conformance command")
+        problems.append(f"contract is {json.dumps(report.get('contract'))}, but the lock says {json.dumps(contract)}, "
+                        f"the cases from {contract['repository']} {contract['commit'][:7]}: rerun the conformance command")
     failures: list[str] = []
     for kind, ok in (("cases", "passed"), ("rejections", "rejected")):
         found, failed = check_rows(report, kind, args.conformance / kind, ok, required_components(args.conformance))
