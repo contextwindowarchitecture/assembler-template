@@ -16,7 +16,8 @@ The adapter command is started once per snapshot with the snapshot file's bytes 
 Any other exit code, or stdout that is not such an object, fails the case with stderr as the detail. The runner
 compares as conformance/README.md, Running a case, says: the payload byte for byte, the trace field for field
 without trace_id, timings and recovery.detail, and it validates each trace against trace.schema.json when the jsonschema package
-is installed. It writes the report in the shape of conformance_report.schema.json (Reporting results), prints a
+is installed. It writes the report in the shape of conformance_report.schema.json (Reporting results), its contract
+naming the repository, commit and dirty flag the lock records (the repository defaults to CONTRACT_REPOSITORY), prints a
 summary, and exits 1 unless every case passed and every rejection snapshot was rejected, apart from those skipped
 for an optional component the port leaves out.
 
@@ -39,6 +40,8 @@ ROOT = Path(__file__).resolve().parent.parent
 LOCK = ROOT / "vendor" / "cwa.lock.json"
 SCHEMAS = ROOT / "vendor" / "cwa" / "schema"
 MISSING = object()
+# The repository the contract is vendored from, as owner/name, for a lock that does not record its own.
+CONTRACT_REPOSITORY = "contextwindowarchitecture/website"
 
 
 def utf16(s: str) -> bytes:
@@ -48,6 +51,12 @@ def utf16(s: str) -> bytes:
 
 def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def report_contract(lock: dict) -> dict:
+    """The report's contract member: the repository and commit the cases were vendored from, and whether the vendored
+    sources were dirty there (Reporting results). The lock's own repository wins over CONTRACT_REPOSITORY."""
+    return {"repository": lock.get("repository", CONTRACT_REPOSITORY), "commit": lock["website_commit"], "dirty": lock["dirty"]}
 
 
 def validator_for(name: str) -> Any:
@@ -282,7 +291,7 @@ def main() -> int:
     required = required_components(args.conformance)
     report = {
         "implementation": implementation,
-        "contract": {"website_commit": lock["website_commit"], "dirty": lock["dirty"]},
+        "contract": report_contract(lock),
         "cases": [{"id": id, "rules": read_json(cases_dir / id / "case.json")["rules"], **run_case(adapter, trace_validator, cases_dir / id, required)}
                   for id in ids(cases_dir)],
         "rejections": [{"id": id, "rules": read_json(rejections_dir / id / "case.json")["rules"], **run_rejection(adapter, rejections_dir / id, required)}

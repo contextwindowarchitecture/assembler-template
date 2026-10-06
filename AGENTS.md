@@ -19,7 +19,7 @@ A <Language> implementation of the CWA draft specification, started from the ass
 - Where the spec leaves a behavior open, don't decide it here. Ask the maintainer. The fix goes into the website repository first, with its tests and a case that pins it, then re-vendor, then implement.
 - `vendor/cwa.lock.json` pins every vendored file by SHA-256, with the website commit it came from and whether the vendored sources were dirty there. Change vendored files only with `python3 scripts/vendor_contract.py --website <checkout>`, from a committed website state. A test in this repository fails when a vendored file no longer matches its hash, or when one is added or missing (PORTING.md, step 3).
 - Anything generated from the vendored contract (types, embedded schemas, embedded reason codes or slot defaults) lives in one generated directory, is regenerated after every re-vendor, and is never edited by hand. A test fails when it is stale.
-- `conformance-report.json` is committed and must be the current run. Rerun the conformance command after any change to the assembler or the vendored contract, and commit the report with the change. `python3 scripts/check_report.py` checks that it is complete and well-formed.
+- `conformance-report.json` is committed and must be the current run. Rerun the conformance command after any change to the assembler or the vendored contract, and commit the report with the change. `python3 scripts/check_report.py` checks that it is complete and well-formed, and that its `contract` names the repository, commit and dirty flag the lock records.
 - One place in the code names the implementation (name, version, language) as reports name it, and a test holds it together with the package manifest.
 
 ## Conformance cases as tests

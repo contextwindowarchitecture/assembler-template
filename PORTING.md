@@ -143,13 +143,13 @@ try {
 }
 ```
 
-The runner compares exactly as a native runner must, validates each trace against `trace.schema.json` when `jsonschema` is installed, writes the report, and exits 1 unless every case passed and every rejection was rejected, apart from those skipped for an optional component the port leaves out. `python3 scripts/check_report.py` then checks the committed report is complete and well-formed; pass `--allow-failures` while `PENDING` is not empty. Once the port has a native runner, the report it writes must satisfy the same checker.
+The runner compares exactly as a native runner must, validates each trace against `trace.schema.json` when `jsonschema` is installed, writes the report with its `contract` naming the repository, commit and dirty flag the lock records, and exits 1 unless every case passed and every rejection was rejected, apart from those skipped for an optional component the port leaves out. `python3 scripts/check_report.py` then checks the committed report is complete and well-formed; pass `--allow-failures` while `PENDING` is not empty. Once the port has a native runner, the report it writes must satisfy the same checker.
 
 ## Step 6: wire the port into the website
 
 The Assembler page shows one row per implementation and counts, per requirement, the cases each one passes. Adding a port takes one import and four small edits in the website repository:
 
-1. Make sure the port is a git repository with a commit and an `origin` remote: the import names the repository from the remote and the run from the commit. The report must name a clean website commit that the website checkout has.
+1. Make sure the port is a git repository with a commit and an `origin` remote: the import names the repository from the remote and the run from the commit. The report's `contract` must name the repository and a clean commit of it that the website checkout has, as `{"repository": "contextwindowarchitecture/website", "commit": "<40 hex>", "dirty": false}`; the runner takes the commit and dirty flag from `vendor/cwa.lock.json`, and the repository too when the lock records one.
 2. Import: `node scripts/import-conformance-report.mjs ../assembler-<language> contract/assembler-<language>-conformance.json`.
 3. Add `{ label: '<Language>', file: 'contract/assembler-<language>-conformance.json' }` to `IMPLEMENTATIONS` in `scripts/conformance-reports.mjs`, and the same pair to `IMPORTED` in `tests/website.test.mjs`.
 4. Add the file to the sources-of-truth table in the website README, and update the two sentences that name the implementations: the matrix note on `assembler.html` and the Reporting results section of `conformance/README.md`.
