@@ -45,8 +45,12 @@ The scripts need Python 3.10 or newer and the standard library; the `jsonschema`
 | --- | --- | --- |
 | Python | `contextwindowarchitecture/assembler-python` | the reference assembler |
 | TypeScript | `contextwindowarchitecture/assembler-typescript` | `@contextwindowarchitecture/assembler` |
+| Go | `contextwindowarchitecture/assembler-go` | `github.com/contextwindowarchitecture/assembler-go` |
+| Rust | `contextwindowarchitecture/assembler-rust` | `contextwindowarchitecture-assembler` (crate) |
 
-A port never reads them. Each was built from the vendored contract alone, and the two behaviors on which they disagreed while both passed every case became spec fixes with a case each. That independence is the point of another port.
+The full list, with each one's conformance report, is [`implementations/`](https://github.com/contextwindowarchitecture/contextwindowarchitecture/tree/main/implementations) in the specification repository.
+
+A port never reads them. Each was built from the vendored contract alone, and the two behaviors on which the first two disagreed while both passed every case became spec fixes with a case each. That independence is the point of another port.
 
 ## License
 
